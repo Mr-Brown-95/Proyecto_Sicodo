@@ -4,12 +4,19 @@
 #define DHTPIN 2 // Definimos el pin digital donde se conecta el sensor DTH11
 #define DHTTYPE DHT11 // Dependiendo del tipo de sensor
 #define ventiladorPin 13 //Definimos en pin digital donde se conecta ventilador
-#define ledPin 12 //Definimos en pin digital donde se conecta el led
+#define ledbuttonPin 12 //Definimos en pin digital donde se conecta el led
 #define buttonPin 3 //Definimos en pin digital donde se conecta el push-button
+#define pirPin 4 //Definimos en pin digital donde se conecta el sensor de movimiento
+#define ledPirPin 11 //Definimos en pin digital donde se conecta el led
 
-int val = 0;//val se emplea para almacenar el estado del boton
-int estado = 0;// 0 LED apagado, mientras que 1 encendido
-int old_val = 0; // Almacena el antiguo valor de val
+int valueLed = 0;//valueLed se emplea para almacenar el estado del led
+int state = 0;// 0 LED apagado, mientras que 1 encendido
+int oldValueLed = 0; // Almacena el antiguo valor de val
+
+int temperatura;// Almacena la temperatura
+int humedad;// Almacena la humedad
+
+int valuePir = 0;//valuePir se emplea para almacenar el estado del sensor PIR
 
 DHT dht(DHTPIN, DHTTYPE); // Inicializamos el sensor DHT11
 
@@ -23,18 +30,22 @@ void setup() {
   lcd.init();// Inicializar el LCD
   lcd.backlight(); //Encender la luz de fondo.
 
-  pinMode (ventiladorPin, OUTPUT);// Configuramos pin de salida
-  pinMode(ledPin, OUTPUT);
+  pinMode (ventiladorPin, OUTPUT);
+
+  pinMode(ledbuttonPin, OUTPUT);
   pinMode(buttonPin, INPUT_PULLUP);
+
+  pinMode(ledPirPin, OUTPUT);
+  pinMode(pirPin, INPUT);
 
 }
 
 void sensorDTH() {
 
-  delay(1000);// Esperamos 5 segundos entre medidas
+  delay(1000);
 
-  float humedad = dht.readHumidity();// Leemos la humedad relativa
-  float temperatura = dht.readTemperature();  // Leemos la temperatura en grados centígrados (por defecto)
+  humedad = dht.readHumidity();
+  temperatura = dht.readTemperature();
 
   // Comprobamos si ha habido algún error en la lectura
   if (isnan(humedad) || isnan(temperatura)) {
@@ -54,34 +65,53 @@ void sensorDTH() {
   lcd.print("Temperatura: ");
   lcd.print(temperatura);
 
-  if ( ( humedad > 33 ) || ( temperatura > 26 ) ) { // si la humeldad es mayor a 31ª o la temperatura es mayor a 22ª
-    digitalWrite (ventiladorPin, HIGH); // enciende ventilador
+  //( humedad > 33 ) || ( temperatura > 26 )
+  if (  temperatura >= 30  ) { 
+    digitalWrite (ventiladorPin, HIGH);
   }
-  else {// si no, se apaga
-    digitalWrite (ventiladorPin, LOW);// apagar ventilador
+  else {
+    digitalWrite (ventiladorPin, LOW);
   }
 }
 
 void manejadorLed() {
 
-  val = digitalRead(buttonPin);
-  if ((val == HIGH) && (old_val == LOW)) {
-    estado = 1 - estado;
+  valueLed = digitalRead(buttonPin);
+  
+  if ((valueLed == HIGH) && (oldValueLed == LOW)) {
+    state = 1 - state;
     delay(10);
   }
-  old_val = val; // valor del antiguo estado
-  if (estado == 1) {
-    digitalWrite(ledPin, HIGH); // enciende el LED
+  oldValueLed = valueLed;
+  if (state == 1) {
+    digitalWrite(ledbuttonPin, HIGH);
   }
   else {
-    digitalWrite(ledPin, LOW); // apagar el LED
+    digitalWrite(ledbuttonPin, LOW);
   }
 }
 
+void sensorPir() {
+
+  valuePir = digitalRead(pirPin);
+
+  if (valuePir == HIGH)
+  {
+    digitalWrite(ledPirPin, HIGH);
+    delay(5000);
+    digitalWrite(ledPirPin, LOW);
+    delay(50);
+  }
+  else
+  {
+    digitalWrite(ledPirPin, LOW);
+  }
+}
 
 void loop() {
 
   manejadorLed();
   sensorDTH();
+  sensorPir();
 
 }
