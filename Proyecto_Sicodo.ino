@@ -2,7 +2,7 @@
 #include <LiquidCrystal_I2C.h>
 
 #define DHTPIN 2 // Definimos el pin digital donde se conecta el sensor DTH11
-#define DHTTYPE DHT11 // Dependiendo del tipo de sensor
+#define DHTTYPE DHT11 // Definimos el tipo de sensor
 
 #define pirPin 3 //Definimos en pin digital donde se conecta el sensor de movimiento
 #define lightSensorPin A3 //Definimos en pin analogico donde se conecta el sensor de luz
@@ -100,7 +100,9 @@ void pushButton() {
     state = 1 - state;
     delay(10);
   }
+  
   oldValueLed = valueLed;
+  
   if (state == 1) {
     digitalWrite(ledButtonPin, HIGH);
   }
