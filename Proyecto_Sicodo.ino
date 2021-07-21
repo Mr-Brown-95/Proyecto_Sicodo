@@ -4,61 +4,38 @@
 #define DHTPIN 2 // Definimos el pin digital donde se conecta el sensor DTH11
 #define DHTTYPE DHT11 // Dependiendo del tipo de sensor
 
+#define pirPin 3 //Definimos en pin digital donde se conecta el sensor de movimiento
+#define lightSensorPin A3 //Definimos en pin analogico donde se conecta el sensor de luz
+#define buttonPin 4 //Definimos en pin digital donde se conecta el push-button
 
 #define ventiladorPin 13 //Definimos en pin digital donde se conecta ventilador
-#define ledbuttonPin 12 //Definimos en pin digital donde se conecta el led
-#define ledPirPin 11 //Definimos en pin digital donde se conecta el led
-#define ledSensorLuzPin 10 //Definimos en pin digital donde se conecta el led
+#define ledPirPin 12 //Definimos en pin digital donde se conecta el led
+#define ledLightSensorPin 11 //Definimos en pin digital donde se conecta el led
+#define ledButtonPin 10 //Definimos en pin digital donde se conecta el led(RELEY+FOCO)
 
-#define buttonPin 3 //Definimos en pin digital donde se conecta el push-button
-#define pirPin 4 //Definimos en pin digital donde se conecta el sensor de movimiento
-#define SensorLuzPin A0 //Definimos en pin analogico donde se conecta el sensor de luz
+int temperature;// Almacena la temperatura
+int humidity;// Almacena la humedad
+
+int valuePir = 0;//valuePir se emplea para almacenar el estado del sensor PIR
+int valueLightSensor = 0;//valueLightSensor se emplea para almacenar las lecruras dell sensor de luz
 
 int valueLed = 0;//valueLed se emplea para almacenar el estado del led
 int state = 0;// 0 LED apagado, mientras que 1 encendido
 int oldValueLed = 0; // Almacena el antiguo valor de val
 
-int temperatura;// Almacena la temperatura
-int humedad;// Almacena la humedad
-
-int valuePir = 0;//valuePir se emplea para almacenar el estado del sensor PIR
-
-int valueLightSensor = 0;//valueLightSensor se emplea para almacenar las lecruras dell sensor de luz
-
 DHT dht(DHTPIN, DHTTYPE); // Inicializamos el sensor DHT11
 
 LiquidCrystal_I2C lcd(0x27, 20, 4); // Crear el objeto lcd  dirección 0x27 para 16 caracteres y 2 lineas en el display
-
-void setup() {
-
-  Serial.begin(9600); // Inicializamos comunicación serie
-
-  dht.begin();  // Comenzamos el sensor DHT
-  lcd.init();// Inicializar el LCD
-  lcd.backlight(); //Encender la luz de fondo.
-
-  pinMode (ventiladorPin, OUTPUT);
-
-  pinMode(ledbuttonPin, OUTPUT);
-  pinMode(buttonPin, INPUT_PULLUP);
-
-  pinMode(ledPirPin, OUTPUT);
-  pinMode(pirPin, INPUT);
-
-  pinMode(ledSensorLuzPin, OUTPUT);
-  pinMode(SensorLuzPin, INPUT);
-
-}
 
 void sensorDTH() {
 
   delay(1000);
 
-  humedad = dht.readHumidity();
-  temperatura = dht.readTemperature();
+  humidity = dht.readHumidity();
+  temperature = dht.readTemperature();
 
   // Comprobamos si ha habido algún error en la lectura
-  if (isnan(humedad) || isnan(temperatura)) {
+  if (isnan(humidity) || isnan(temperature)) {
     lcd.setCursor(0, 0);
     lcd.print("Error obteniendo");
     lcd.setCursor(0, 1);
@@ -69,14 +46,14 @@ void sensorDTH() {
   //imprimimos los valores dentro del lcd
   lcd.setCursor(0, 0);// Ubicamos el cursor en la primera posición(columna:0) de la segunda línea(fila:1)
   lcd.print("Humedad: ");// Escribimos el Mensaje en el LCD.
-  lcd.print(humedad);// Escribimos el valor de la variable humedad.
+  lcd.print(humidity);// Escribimos el valor de la variable humedad.
   lcd.print("   ");
   lcd.setCursor(0, 1);
   lcd.print("Temperatura: ");
-  lcd.print(temperatura);
+  lcd.print(temperature);
 
   //( humedad > 33 ) || ( temperatura > 26 )
-  if (  temperatura >= 30  ) {
+  if (  temperature >= 30  ) {
     digitalWrite (ventiladorPin, HIGH);
   }
   else {
@@ -102,14 +79,16 @@ void sensorPir() {
   }
 }
 
-void sensorLuz() {
+void sensorLight() {
 
-  valueLightSensor = analogRead(SensorLuzPin);
-  Serial.println(valueLightSensor);
+  valueLightSensor = analogRead(ledLightSensorPin);
+
+  //Serial.println(valueLightSensor);
+
   if (valueLightSensor < 750) {
-    digitalWrite(ledSensorLuzPin, HIGH);
+    digitalWrite(ledLightSensorPin, HIGH);
   } else {
-    digitalWrite(ledSensorLuzPin,LOW );
+    digitalWrite(ledLightSensorPin, LOW );
   }
 }
 
@@ -123,18 +102,39 @@ void pushButton() {
   }
   oldValueLed = valueLed;
   if (state == 1) {
-    digitalWrite(ledbuttonPin, HIGH);
+    digitalWrite(ledButtonPin, HIGH);
   }
   else {
-    digitalWrite(ledbuttonPin, LOW);
+    digitalWrite(ledButtonPin, LOW);
   }
+}
+
+void setup() {
+
+  Serial.begin(9600); // Inicializamos comunicación serie
+
+  dht.begin();  // Comenzamos el sensor DHT
+  lcd.init();// Inicializar el LCD
+  lcd.backlight(); //Encender la luz de fondo.
+
+  pinMode (ventiladorPin, OUTPUT);
+
+  pinMode(ledPirPin, OUTPUT);
+  pinMode(pirPin, INPUT);
+
+  pinMode(ledLightSensorPin, OUTPUT);
+  pinMode(lightSensorPin, INPUT);
+
+  pinMode(ledButtonPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
+
 }
 
 void loop() {
 
   sensorDTH();
   sensorPir();
-  sensorLuz();
+  sensorLight();
   pushButton();
 
 }
