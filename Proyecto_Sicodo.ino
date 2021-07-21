@@ -3,11 +3,16 @@
 
 #define DHTPIN 2 // Definimos el pin digital donde se conecta el sensor DTH11
 #define DHTTYPE DHT11 // Dependiendo del tipo de sensor
+
+
 #define ventiladorPin 13 //Definimos en pin digital donde se conecta ventilador
 #define ledbuttonPin 12 //Definimos en pin digital donde se conecta el led
+#define ledPirPin 11 //Definimos en pin digital donde se conecta el led
+#define ledSensorLuzPin 10 //Definimos en pin digital donde se conecta el led
+
 #define buttonPin 3 //Definimos en pin digital donde se conecta el push-button
 #define pirPin 4 //Definimos en pin digital donde se conecta el sensor de movimiento
-#define ledPirPin 11 //Definimos en pin digital donde se conecta el led
+#define SensorLuzPin A0 //Definimos en pin analogico donde se conecta el sensor de luz
 
 int valueLed = 0;//valueLed se emplea para almacenar el estado del led
 int state = 0;// 0 LED apagado, mientras que 1 encendido
@@ -17,6 +22,8 @@ int temperatura;// Almacena la temperatura
 int humedad;// Almacena la humedad
 
 int valuePir = 0;//valuePir se emplea para almacenar el estado del sensor PIR
+
+int valueLightSensor = 0;//valueLightSensor se emplea para almacenar las lecruras dell sensor de luz
 
 DHT dht(DHTPIN, DHTTYPE); // Inicializamos el sensor DHT11
 
@@ -37,6 +44,9 @@ void setup() {
 
   pinMode(ledPirPin, OUTPUT);
   pinMode(pirPin, INPUT);
+
+  pinMode(ledSensorLuzPin, OUTPUT);
+  pinMode(SensorLuzPin, INPUT);
 
 }
 
@@ -66,7 +76,7 @@ void sensorDTH() {
   lcd.print(temperatura);
 
   //( humedad > 33 ) || ( temperatura > 26 )
-  if (  temperatura >= 30  ) { 
+  if (  temperatura >= 30  ) {
     digitalWrite (ventiladorPin, HIGH);
   }
   else {
@@ -74,22 +84,6 @@ void sensorDTH() {
   }
 }
 
-void manejadorLed() {
-
-  valueLed = digitalRead(buttonPin);
-  
-  if ((valueLed == HIGH) && (oldValueLed == LOW)) {
-    state = 1 - state;
-    delay(10);
-  }
-  oldValueLed = valueLed;
-  if (state == 1) {
-    digitalWrite(ledbuttonPin, HIGH);
-  }
-  else {
-    digitalWrite(ledbuttonPin, LOW);
-  }
-}
 
 void sensorPir() {
 
@@ -108,10 +102,39 @@ void sensorPir() {
   }
 }
 
+void sensorLuz() {
+
+  valueLightSensor = analogRead(SensorLuzPin);
+  Serial.println(valueLightSensor);
+  if (valueLightSensor < 750) {
+    digitalWrite(ledSensorLuzPin, HIGH);
+  } else {
+    digitalWrite(ledSensorLuzPin,LOW );
+  }
+}
+
+void pushButton() {
+
+  valueLed = digitalRead(buttonPin);
+
+  if ((valueLed == HIGH) && (oldValueLed == LOW)) {
+    state = 1 - state;
+    delay(10);
+  }
+  oldValueLed = valueLed;
+  if (state == 1) {
+    digitalWrite(ledbuttonPin, HIGH);
+  }
+  else {
+    digitalWrite(ledbuttonPin, LOW);
+  }
+}
+
 void loop() {
 
-  manejadorLed();
   sensorDTH();
   sensorPir();
+  sensorLuz();
+  pushButton();
 
 }
